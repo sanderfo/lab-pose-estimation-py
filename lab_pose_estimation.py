@@ -172,7 +172,7 @@ class HomographyPoseEstimator:
 
         # TODO 3: Compute M.
         # Compute the matrix M and extract M_bar (the two first columns of M).
-        M = np.identity(3)          # Dummy, replace!
+        M = self._calibration_matrix_inv @ H          # Dummy, replace!
         M_bar = M[:, :2]
 
         # Perform SVD on M_bar.
@@ -184,20 +184,29 @@ class HomographyPoseEstimator:
 
         # TODO 4: Compute R_bar.
         # Compute R_bar (the two first columns of R) from the result of the SVD.
-        R_bar = np.zeros([3, 2])    # Dummy, replace!
+        R_bar = U @ Vh    # Dummy, replace!
 
         # TODO 5: Construct R.
         # Construct R by inserting R_bar and computing the third column of R from the two first.
         # Remember to check det(R)!
-        R = np.identity(3)          # Dummy, replace!
+        R = np.identity(3)
+        R[:, 0:2] = R_bar          # Dummy, replace!
+        R[:, 2] = np.cross(R[:,0], R[:,1])
+        print(np.linalg.det(R))
 
         # TODO 6: Compute the scale.
         # Compute the scale factor.
-        scale = 0.                  # Dummy, replace!
+        scale = np.trace(R.T @ M_bar)/np.trace(M_bar.T @ M_bar)                  # Dummy, replace!
 
         # TODO 7: Find the correct solution.
         # Extract the translation t.
-        t = np.zeros([3, 1])        # Dummy, replace!
+        t = M[:, -1]*scale        # Dummy, replace!
+        if t[-1] < 0:
+            t = -t
+            R[:, 2] *= -1
+        
+
+        print(t)
 
         # We now have the pose of the world in the camera frame!
         pose_c_w = SE3((SO3(R), t))
